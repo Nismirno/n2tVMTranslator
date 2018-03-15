@@ -14,7 +14,10 @@ def main():
     fileName = os.path.splitext(sys.argv[1])[0]
     print(fileName)
     myParser = Parser(fileName)
-    myCodeWriter = CodeWriter(fileName)
+    myParser.initializeParser()
+    parsedProg = [line for line in myParser.parse()]
+    myCodeWriter = CodeWriter(fileName, parsedProg)
+    myCodeWriter.writeCode()
     return None
 
 
