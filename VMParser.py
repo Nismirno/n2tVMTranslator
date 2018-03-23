@@ -1,23 +1,16 @@
 #!/usr/bin/env python
-from enum import Enum
-
-cType = Enum("cType", "ARITHMETIC POP PUSH LABEL \
-                       GOTO IF FUNCTION RETURN CALL")
 arithmetic = ("add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not")
 
 
 class Parser:
     def __init__(self, fileName):
-        self.inFile = open(fileName + ".vm", 'r')
-        return None
-
-    def initializeParser(self):
-        lines = self.inFile.readlines()
-        self.prog = map(lambda x: x.strip(), lines)
+        with fileName.open() as f:
+            self.prog = list(map(lambda x: x.strip(), f.readlines()))
         self.isComment = False
         return None
 
     def advance(self, line):
+        outLine = ''
         if ('//' in line):
             i = line.find('/')
             outLine = line[:i].strip()
@@ -39,29 +32,29 @@ class Parser:
 
     def commandType(self, line):
         if ('pop' in line):
-            t = cType.POP
+            t = "POP"
         elif ('push' in line):
-            t = cType.PUSH
+            t = "PUSH"
         elif ('label' in line):
-            t = cType.LABEL
+            t = "LABEL"
+        elif ('if' in line):
+            t = "IF"
         elif ('goto' in line):
-            t = cType.GOTO
-        elif ('if-goto' in line):
-            t = cType.IF
+            t = "GOTO"
         elif ('function' in line):
-            t = cType.FUNCTION
+            t = "FUNCTION"
         elif ('call' in line):
-            t = cType.CALL
+            t = "CALL"
         elif ('return' in line):
-            t = cType.RETURN
+            t = "RETURN"
         elif (any(x in line for x in arithmetic)):
-            t = cType.ARITHMETIC
+            t = "ARITHMETIC"
         else:
             t = None
         return t
 
     def arg1(self, line, command):
-        if (command == cType.ARITHMETIC):
+        if (command == "ARITHMETIC"):
             arg1 = line
         else:
             arg1 = line.split()[1]
@@ -75,14 +68,13 @@ class Parser:
             parsedLine = self.advance(line)
             if (not parsedLine):
                 continue
-            command = self.commandType(line)
-#            print(command)  # debug
-            if (command != cType.RETURN):
+            command = self.commandType(parsedLine)
+            if (command != "RETURN"):
                 arg1 = self.arg1(parsedLine, command)
             else:
                 arg1 = None
-            arg2Cond = (command == cType.POP or command == cType.PUSH or
-                        command == cType.FUNCTION or command == cType.CALL)
+            arg2Cond = (command == "POP" or command == "PUSH" or
+                        command == "FUNCTION" or command == "CALL")
             if (arg2Cond):
                 arg2 = self.arg2(parsedLine)
             else:

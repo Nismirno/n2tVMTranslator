@@ -1,23 +1,49 @@
 #!/usr/bin/env python
-from src.parser import Parser
-from src.codewriter import CodeWriter
+from VMParser import Parser
+from VMCodewriter import CodeWriter
+from pathlib import Path
 import sys
-import os
+
+
+def processDirectory(inputPath):
+    fileName = str(inputPath.stem)
+    myWriter = CodeWriter(fileName)
+    lines = myWriter.initHeader()
+    for f in inputPath.glob("*.vm"):
+        lines += processFile(f)
+    return lines
+
+
+def processFile(inputPath):
+    myParser = Parser(inputPath)
+    fileName = str(inputPath.stem)
+    parsedProg = [line for line in myParser.parse()]
+    myWriter = CodeWriter(fileName)
+    return myWriter.writeCode(parsedProg)
 
 
 def main():
     if (len(sys.argv) < 2):
-        print("Enter VM file name")
+        print("Enter VM file name or directory")
         print("Example:")
-        print(f"{os.path.basename(sys.argv[0])} path_to_file.vm")
+        print("{0} path_to_file.vm".format(sys.argv[0]))
+        print("{0} path_to_dir".format(sys.argv[0]))
         input("Press Enter to exit...")
-    fileName = os.path.splitext(sys.argv[1])[0]
-    print(fileName)
-    myParser = Parser(fileName)
-    myParser.initializeParser()
-    parsedProg = [line for line in myParser.parse()]
-    myCodeWriter = CodeWriter(fileName, parsedProg)
-    myCodeWriter.writeCode()
+    inputPath = Path(sys.argv[1])
+    realPath = Path.resolve(inputPath)
+    isDir = realPath.is_dir()
+    if (isDir):
+        outName = str(realPath / realPath.name)
+        outFile = open("{0}.asm".format(outName), 'w')
+        output = processDirectory(realPath)
+        outFile.write('\n'.join(output))
+    elif (realPath.suffix == ".vm"):
+        outName = str(realPath.parent / realPath.stem)
+        outFile = open("{0}.asm".format(outName), 'w')
+        output = processFile(realPath)
+        outFile.write('\n'.join(output))
+    else:
+        print("Input file must be of .vm extension")
     return None
 
 
